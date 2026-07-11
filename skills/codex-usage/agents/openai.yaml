@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Usage"
+  short_description: "查询本地 Codex 用量、限额、Reset 与同步状态"
+  default_prompt: "Use $codex-usage to inspect local Codex usage and synchronization health."

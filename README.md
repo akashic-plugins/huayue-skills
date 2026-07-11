@@ -5,6 +5,7 @@ Akashic personal skills bundle.
 Included skills:
 
 - anthropic-diagram
+- codex-usage
 - gh-cli
 - image-generation-nano
 - opencli
