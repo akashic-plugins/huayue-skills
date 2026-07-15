@@ -3,7 +3,7 @@
 # Usage: ./download.sh [options] URL
 #
 # Options:
-#   -p, --path PATH      Download path (default: ~/.akashic/workspace/downloads)
+#   -p, --path PATH      Download path (default: $AKASHIC_WORKSPACE/downloads)
 #   -a, --audio          Extract audio only (MP3)
 #   -s, --subs           Download subtitles
 #   -q, --quality NUM    Max video height (720, 1080, etc.)
@@ -11,16 +11,17 @@
 #   -l, --list           List available formats
 #   -h, --help           Show this help
 
-set -e
+set -euo pipefail
 
 # Default values
-DOWNLOAD_PATH="${HOME}/.akashic/workspace/downloads"
+DOWNLOAD_PATH=""
 AUDIO_ONLY=false
 DOWNLOAD_SUBS=false
 QUALITY=""
 FORMAT_ID=""
 LIST_FORMATS=false
 EXTRA_ARGS=()
+URL=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -90,6 +91,10 @@ esac
 if [[ "$LIST_FORMATS" == true ]]; then
     yt-dlp "${EXTRA_ARGS[@]}" -F "$URL"
     exit 0
+fi
+
+if [[ -z "$DOWNLOAD_PATH" ]]; then
+    DOWNLOAD_PATH="${AKASHIC_WORKSPACE:?AKASHIC_WORKSPACE is required}/downloads"
 fi
 
 # Create download directory

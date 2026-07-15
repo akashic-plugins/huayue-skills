@@ -192,7 +192,9 @@ endArrow=open;endSize=14;
 将生成的 XML 写入 `.drawio` 文件：
 
 ```bash
-echo "$XML_CONTENT" > /home/huashen/.akashic/workspace/diagrams/<diagram_name>.drawio
+OUTPUT_DIR="${AKASHIC_WORKSPACE:?AKASHIC_WORKSPACE is required}/diagrams"
+mkdir -p "$OUTPUT_DIR"
+echo "$XML_CONTENT" > "$OUTPUT_DIR/<diagram_name>.drawio"
 ```
 
 文件名建议：
@@ -214,7 +216,8 @@ echo "$XML_CONTENT" > /home/huashen/.akashic/workspace/diagrams/<diagram_name>.d
 
 导出命令：
 ```bash
-drawio -x -f png -b 20 -o /home/huashen/.akashic/workspace/diagrams/<name>.png /home/huashen/.akashic/workspace/diagrams/<name>.drawio
+OUTPUT_DIR="${AKASHIC_WORKSPACE:?AKASHIC_WORKSPACE is required}/diagrams"
+drawio -x -f png -b 20 -o "$OUTPUT_DIR/<name>.png" "$OUTPUT_DIR/<name>.drawio"
 ```
 
 **关键参数：**
@@ -310,7 +313,7 @@ drawio -x -f png -b 20 -o /home/huashen/.akashic/workspace/diagrams/<name>.png /
 
 **无需特殊语法**，自然语言描述即可。技能自动匹配中英文。
 
-**输出位置**：`/home/huashen/.akashic/workspace/diagrams/`
+**输出位置**：`$AKASHIC_WORKSPACE/diagrams/`
 
 **打开方式**：
 - 在线：拖入 https://app.diagrams.net/

@@ -22,15 +22,15 @@ sudo pacman -S ffmpeg       # Arch
 
 ## 下载目录
 
-默认保存到 `~/.akashic/workspace/downloads/`，可按用户要求修改。
+默认保存到 `$AKASHIC_WORKSPACE/downloads/`，可通过 `--path` 按用户要求修改。
 
 ## 推荐方式：使用辅助脚本
 
-**所有下载必须保存到 `~/.akashic/workspace/downloads/`，禁止存到其他目录。**
+**未显式指定目录时，所有下载必须保存到 `$AKASHIC_WORKSPACE/downloads/`。**
 技能目录下有封装好的脚本，优先使用（默认路径已配置正确）：
 
 ```bash
-SKILL_DIR="/home/huashen/.akashic/workspace/skills/yt-dlp-downloader"
+SKILL_DIR="<本技能的实际目录>"
 
 # 基本下载
 bash "$SKILL_DIR/scripts/download.sh" "URL"
@@ -55,16 +55,16 @@ bash "$SKILL_DIR/scripts/download.sh" -l "URL"
 
 ```bash
 # 普通下载
-yt-dlp -P "~/.akashic/workspace/downloads" "URL"
+yt-dlp -P "${AKASHIC_WORKSPACE:?AKASHIC_WORKSPACE is required}/downloads" "URL"
 
 # YouTube / B站（必须带 chromium cookies）
-yt-dlp -P "~/.akashic/workspace/downloads" --cookies-from-browser chromium+gnomekeyring "URL"
+yt-dlp -P "${AKASHIC_WORKSPACE:?AKASHIC_WORKSPACE is required}/downloads" --cookies-from-browser chromium+gnomekeyring "URL"
 
 # 仅音频
-yt-dlp -P "~/.akashic/workspace/downloads" -x --audio-format mp3 "URL"
+yt-dlp -P "${AKASHIC_WORKSPACE:?AKASHIC_WORKSPACE is required}/downloads" -x --audio-format mp3 "URL"
 
 # 指定画质
-yt-dlp -P "~/.akashic/workspace/downloads" -f "bestvideo[height<=1080]+bestaudio/best[height<=1080]" "URL"
+yt-dlp -P "${AKASHIC_WORKSPACE:?AKASHIC_WORKSPACE is required}/downloads" -f "bestvideo[height<=1080]+bestaudio/best[height<=1080]" "URL"
 ```
 
 ## 工作流程
@@ -79,7 +79,7 @@ yt-dlp -P "~/.akashic/workspace/downloads" -f "bestvideo[height<=1080]+bestaudio
 B站链接包括 `bilibili.com`、`b23.tv`、`bili2233.cn`。遇到这些链接时，不要裸跑 `yt-dlp`，直接走脚本：
 
 ```bash
-SKILL_DIR="/home/huashen/.akashic/workspace/skills/yt-dlp-downloader"
+SKILL_DIR="<本技能的实际目录>"
 bash "$SKILL_DIR/scripts/download.sh" "URL"
 ```
 
