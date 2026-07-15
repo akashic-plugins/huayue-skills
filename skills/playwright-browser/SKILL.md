@@ -35,10 +35,10 @@ allowed-tools: Bash(python3), Bash(pip), Bash(curl)
 ```
 systemctl --user status cloakbrowser.service    # 查看状态
 systemctl --user start/stop cloakbrowser.service # 启停
-~/.cloakbrowser/login_helper.sh [URL]           # 弹有头窗口登录
+"${CLOAKBROWSER_HOME:?CLOAKBROWSER_HOME is required}/login_helper.sh" [URL] # 弹有头窗口登录
 ```
 
-登录态写进 `/home/huashen/.cloakbrowser/profile/`，重启不丢，
+登录态写进 `$CLOAKBROWSER_HOME/profile/`，重启不丢；该变量必须指向服务实际使用的数据目录。
 重启后 `loginctl enable-linger` 保证开机自启。
 
 ## 核心模板（Python）
@@ -62,6 +62,9 @@ with sync_playwright() as p:
 ### 截图（CDP）
 
 ```python
+import os
+from pathlib import Path
+
 from playwright.sync_api import sync_playwright
 
 with sync_playwright() as p:
@@ -69,7 +72,9 @@ with sync_playwright() as p:
     ctx = browser.contexts[0]
     page = ctx.new_page()
     page.goto("https://example.com", wait_until="networkidle", timeout=30000)
-    page.screenshot(path="/home/huashen/.akashic/workspace/pictures/screenshot.png", full_page=True)
+    output = Path(os.environ["AKASHIC_WORKSPACE"]) / "pictures" / "screenshot.png"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    page.screenshot(path=str(output), full_page=True)
     page.close()
 ```
 
@@ -79,7 +84,7 @@ with sync_playwright() as p:
 cookies = page.context.cookies()
 domain_cookies = [c for c in cookies if "targetdomain" in c.get("domain", "")]
 if not domain_cookies:
-    print("NEEDS_LOGIN: 未登录，请用 ~/.cloakbrowser/login_helper.sh [URL] 登录")
+    print("NEEDS_LOGIN: 未登录，请用 $CLOAKBROWSER_HOME/login_helper.sh [URL] 登录")
 else:
     print("SESSION_OK")
 ```
@@ -118,7 +123,7 @@ playwright 装在 agent venv 里，必须用这个解释器：
 
 系统 `python3` 没有 playwright，不要用。
 
-截图路径统一用 `/home/huashen/.akashic/workspace/pictures/`，之后用 message_push(image=...) 发。
+截图路径统一用 `$AKASHIC_WORKSPACE/pictures/`，之后用 message_push(image=...) 发。
 
 ## 注意事项
 

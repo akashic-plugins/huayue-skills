@@ -3,13 +3,19 @@ set -euo pipefail
 
 REPOSITORY="https://github.com/kachofugetsu09/codex-usage.git"
 REPOSITORY_SLUG="kachofugetsu09/codex-usage"
-INSTALL_DIR="${CODEX_USAGE_HOME:-$HOME/.local/share/codex-usage}"
 
 if command -v codex-usage >/dev/null 2>&1; then
   codex-usage capabilities >/dev/null
   printf '{"status":"ready","installed":true,"cli":"%s"}\n' "$(command -v codex-usage)"
   exit 0
 fi
+
+INSTALL_ROOT="${CODEX_USAGE_HOME:-${AKA_PLUGIN_DATA_DIR:-}}"
+if [[ -z "$INSTALL_ROOT" ]]; then
+  printf '{"error":{"message":"缺少安装目录","action":"设置 CODEX_USAGE_HOME 或 AKA_PLUGIN_DATA_DIR"}}\n' >&2
+  exit 1
+fi
+INSTALL_DIR="${CODEX_USAGE_HOME:-$AKA_PLUGIN_DATA_DIR/codex-usage}"
 
 for dependency in git node npm; do
   if ! command -v "$dependency" >/dev/null 2>&1; then

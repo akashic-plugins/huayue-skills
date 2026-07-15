@@ -23,7 +23,7 @@ Resolve `scripts/ensure-installed.sh` relative to this `SKILL.md`, not the user'
 
 1. Checks `git`, `node`, and `npm` without changing the machine.
 2. Uses an authenticated GitHub CLI session for the private repository; if unavailable, reports `gh auth login` as the required action.
-3. Clones `https://github.com/kachofugetsu09/codex-usage.git` into `${CODEX_USAGE_HOME:-$HOME/.local/share/codex-usage}` only when absent.
+3. Clones `https://github.com/kachofugetsu09/codex-usage.git` into `$CODEX_USAGE_HOME`, or `$AKA_PLUGIN_DATA_DIR/codex-usage` when only the plugin data directory is provided.
 4. Refuses to overwrite an unrelated directory.
 5. Runs the repository's audited `npm run setup` entrypoint.
 6. Verifies `codex-usage capabilities` before reporting success.
