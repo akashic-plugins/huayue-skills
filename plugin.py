@@ -2,6 +2,7 @@ from agent.plugins import Plugin
 
 
 class HuayueSkillsPlugin(Plugin):
+    api_version = 2
     name = "huayue-skills"
     version = "1.0.0"
     desc = "Huayue personal skills bundle"
