@@ -10,7 +10,7 @@ metadata: {"akashic": {"always": false, "requires": {"bins": ["opencli"], "env":
 
 ## 核心约束（优先级最高）
 
-1. **所有需要 Browser Bridge 的操作必须使用后台常驻窗口**，花月哥哥不允许弹窗或抢焦点
+1. **所有需要 Browser Bridge 的 adapter 命令必须追加** `--window background --site-session persistent --keep-tab true`，不得因为命令能运行就省略；只有 `PUBLIC/LOCAL` 策略可以不加
 2. **优先用 adapter 命令**（`opencli <site> <command>`），零 Token 消耗；跑不通才退到 browser
 3. **结构化输出** `-f json`，不要硬编码 adapter 列表——用 `opencli list -f json` 查
 4. 策略标签：`PUBLIC` 无浏览器要求；`COOKIE/INTERCEPT/UI` 需要 Browser Bridge 插件
@@ -27,6 +27,7 @@ metadata: {"akashic": {"always": false, "requires": {"bins": ["opencli"], "env":
 
 - `--window background` 只表示 Chrome API 不主动聚焦，**不保证 Hyprland 不把新窗口映射到当前 workspace**。
 - 优先复用已经位于 `special:opencli` 的常驻 `OpenCLI Adapter` 窗口；adapter 命令使用 `--window background --site-session persistent --keep-tab true`。
+- 执行不熟悉的 adapter 命令前先读 `opencli <site> <command> --help -f json`。只要 `browser_common_options` 中出现 `window`、`site-session`、`keep-tab`，上述三个参数就是强制参数。
 - 不要为了修复 Bridge 断连启动独立 profile、复制 cookie、删除 `Singleton*`，也不要改动 `~/.config/chromium`。
 - 不要把“daemon 在线”当成“浏览器可用”；Browser Bridge 健康必须由 `opencli doctor` 的 Extension 与 Connectivity 同时为 OK 证明。
 
@@ -51,6 +52,9 @@ opencli producthunt today -f json --limit 10
 opencli bilibili hot -f json --limit 10 --window background --site-session persistent --keep-tab true
 opencli bilibili search "<关键词>" -f json --limit 10 --window background --site-session persistent --keep-tab true
 opencli bilibili video "<BVID>" -f json --window background --site-session persistent --keep-tab true
+opencli bilibili history -f json --window background --site-session persistent --keep-tab true
+opencli bilibili me -f json --window background --site-session persistent --keep-tab true
+opencli bilibili whoami -f json --window background --site-session persistent --keep-tab true
 
 # GitHub
 opencli github whoami -f json --window background --site-session persistent --keep-tab true
@@ -94,6 +98,7 @@ Session 用 stable 名称。一次性 browser session 用完执行 `close`；不
 ## 注意事项
 
 - 所有 `browser` 命令都用 `opencli browser --window background <session> <command>`；不要把 `--window` 放在 leaf command 后面
+- adapter 与 `browser` namespace 的参数位置不同：adapter 的后台参数放在 leaf command 后。错误：`opencli bilibili history -f json`；正确：`opencli bilibili history -f json --window background --site-session persistent --keep-tab true`
 - adapter 报错时先试 `opencli <site> --help` 或加 `-v`；官方有 autofix 机制（详见 references）
 - 大型页面 extract 后读 content 字段，内容超长时分页
 - 不要做让花月哥哥不开心的事
