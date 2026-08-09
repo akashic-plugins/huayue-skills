@@ -18,15 +18,17 @@ metadata: {"akashic": {"always": false, "requires": {"bins": ["opencli"], "env":
 ## 花月环境的浏览器所有权
 
 ```text
-┌─ /usr/bin/chromium → ~/.config/chromium/Default
-│  ├─ 持有花月哥哥的真实登录态与 OpenCLI 扩展
-│  └─ OpenCLI Adapter 常驻窗口应位于 Hyprland special:opencli
-└─ cloakbrowser.service → ~/.cloakbrowser/profile
-   └─ 独立 CDP 浏览器，不持有 OpenCLI 扩展；不要用于 OpenCLI 登录态任务
+├─ 开发工作站
+│  └─ /usr/bin/chromium → ~/.config/chromium/Default
+│     └─ OpenCLI Adapter 常驻窗口位于 Hyprland special:opencli
+└─ hua-home / host-bridge
+   └─ systemd 管理 opencli daemon + 独立持久有头 Chromium /config
+      └─ noVNC 仅供人工恢复登录；Agent 不自行启动第二个 profile
 ```
 
-- `--window background` 只表示 Chrome API 不主动聚焦，**不保证 Hyprland 不把新窗口映射到当前 workspace**。
-- 优先复用已经位于 `special:opencli` 的常驻 `OpenCLI Adapter` 窗口；adapter 命令使用 `--window background --site-session persistent --keep-tab true`。
+- 工作站的 `--window background` 只表示 Chrome API 不主动聚焦，**不保证 Hyprland 不把新窗口映射到当前 workspace**；优先复用 `special:opencli` 中的常驻窗口。
+- `AKASHIC_EXECUTION_MODE=host-bridge` 时只连接服务器已管理的 daemon/profile。不要执行 hidden-browser-start、不要另启 Chromium、不要复制工作站 profile。
+- 两种环境的 adapter 命令都使用 `--window background --site-session persistent --keep-tab true`。
 - 执行不熟悉的 adapter 命令前先读 `opencli <site> <command> --help -f json`。只要 `browser_common_options` 中出现 `window`、`site-session`、`keep-tab`，上述三个参数就是强制参数。
 - 不要为了修复 Bridge 断连启动独立 profile、复制 cookie、删除 `Singleton*`，也不要改动 `~/.config/chromium`。
 - 不要把“daemon 在线”当成“浏览器可用”；Browser Bridge 健康必须由 `opencli doctor` 的 Extension 与 Connectivity 同时为 OK 证明。
@@ -61,9 +63,9 @@ opencli github whoami -f json --window background --site-session persistent --ke
 # 其他能力先查询当前版本，禁止沿用旧命令名
 opencli github --help -f json
 
-# DeepSeek 用量（两步：打开页面 → 提取）
-opencli browser --window background akashic open "https://platform.deepseek.com/usage"
-opencli browser --window background akashic extract
+# DeepSeek 用量（两步：打开页面 → 提取；browser namespace 不接受 -f）
+opencli browser akashic --window background open "https://platform.deepseek.com/usage"
+opencli browser akashic --window background extract
 
 # YouTube
 opencli youtube video "<id>" -f json
@@ -73,12 +75,12 @@ opencli youtube search "<关键词>" -f json --limit 10
 ### Browser 操作（adapter 不够用时）
 
 ```
-opencli browser --window background <session> <command>
+opencli browser <session> --window background <command>
 ```
 核心命令：`bind` `unbind` `open` `state` `extract` `click` `type` `select` `find` `eval` `screenshot` `network`
 
 每次 action 前先 `state` 或 `find` 获取目标，用数字 ref 而非 CSS 选择器。
-Session 用 stable 名称。一次性 browser session 用完执行 `close`；不要关闭位于 `special:opencli` 的 adapter 常驻窗口或用于保持 Bridge 在线的持久 site session。`unbind` 只适合绑定用户标签页的场景。
+Session 用 stable 名称。一次性 browser session 用完执行 `close`；不要关闭工作站 `special:opencli` 窗口、服务器持久浏览器或用于保持 Bridge 在线的持久 site session。`unbind` 只适合绑定用户标签页的场景。
 详见 references/opencli-browser.SKILL.md。
 
 ## 登录态维护
@@ -90,14 +92,14 @@ Session 用 stable 名称。一次性 browser session 用完执行 `close`；不
 ### Bridge 断连诊断
 
 1. 运行 `opencli doctor`，分别记录 Daemon、Extension、Connectivity。
-2. 若 Daemon OK、Extension MISSING，检查 `/usr/bin/chromium` 是否正以真实 Default profile 运行；不要被 9222 上的 CloakBrowser 进程误导。
-3. 若真实 Chromium 未运行，明确报告“真实 profile 浏览器未启动/常驻窗口丢失”，不要声称无头 Chromium 天然不能加载扩展。
+2. 若 Daemon OK、Extension MISSING：工作站检查真实 Default profile；host-bridge 检查服务器持久浏览器容器。不要被其他 CDP/Browserless 进程误导。
+3. 若浏览器未运行，明确报告“受管理 profile 浏览器未启动/常驻窗口丢失”，不要自行创建替代 profile。
 4. 若真实 Chromium 在运行但扩展仍断连，再执行一次 `opencli daemon restart` 并重新运行 `opencli doctor`；仍失败则保留原始错误，不静默改用独立 profile。
 5. PUBLIC/LOCAL adapter 不依赖 Bridge；只有 COOKIE/INTERCEPT/UI 和 `opencli browser` 必须在 doctor 绿色后执行。
 
 ## 注意事项
 
-- 所有 `browser` 命令都用 `opencli browser --window background <session> <command>`；不要把 `--window` 放在 leaf command 后面
+- 所有 `browser` 命令都用 `opencli browser <session> --window background <command>`；session 必须紧跟 `browser`
 - adapter 与 `browser` namespace 的参数位置不同：adapter 的后台参数放在 leaf command 后。错误：`opencli bilibili history -f json`；正确：`opencli bilibili history -f json --window background --site-session persistent --keep-tab true`
 - adapter 报错时先试 `opencli <site> --help` 或加 `-v`；官方有 autofix 机制（详见 references）
 - 大型页面 extract 后读 content 字段，内容超长时分页
