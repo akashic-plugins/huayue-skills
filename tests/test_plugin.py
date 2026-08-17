@@ -9,16 +9,13 @@ import pytest
 
 import plugin as plugin_module
 from agent.plugin_composition import (
-    SKILLS,
     CompositionRoot,
-    Context,
     PluginRuntime,
-    PluginSkills,
 )
 from agent.plugins.composable import ComposablePlugin
 from agent.plugins.manager import PluginManager
+from agent.plugins.static_manifest import load_static_plugin_manifest
 from bus.event_bus import EventBus
-from plugin import HuayueSkillsPlugin, apply, inject
 
 PLUGIN_ROOT = Path(__file__).parents[1]
 EXPECTED_SKILLS = {
@@ -50,22 +47,13 @@ def _tree_receipt(roots: tuple[Path, ...]) -> tuple[tuple[str, int, str], ...]:
 
 
 @pytest.mark.asyncio
-async def test_v3_skills_match_v2_tree_and_cleanup_receipt(tmp_path: Path) -> None:
-    _ = ComposablePlugin.from_module(plugin_module)
-    legacy_roots = tuple(
-        PLUGIN_ROOT / relative for relative in HuayueSkillsPlugin.skill_roots()
-    )
+async def test_v3_skills_preserve_source_tree_and_cleanup_receipt(tmp_path: Path) -> None:
+    plugin = ComposablePlugin.from_module(plugin_module)
+    source_roots = (PLUGIN_ROOT / "skills",)
     root = CompositionRoot("huayue-skills-parity")
-    skills = PluginSkills()
-    _ = await root.context.provide(SKILLS, skills)
-
-    async def mount(ctx: Context) -> None:
-        await apply(ctx, object())
-
     _ = await root.mount(
-        mount,
+        plugin,
         name="huayue-skills",
-        inject=inject,
         runtime=PluginRuntime(
             plugin_id="huayue-skills",
             plugin_dir=PLUGIN_ROOT,
@@ -75,11 +63,10 @@ async def test_v3_skills_match_v2_tree_and_cleanup_receipt(tmp_path: Path) -> No
         ),
     )
 
-    contribution = skills.freeze()["huayue-skills"]
     receipt = root.receipt()
-    assert contribution.skill_roots == legacy_roots
-    assert contribution.drift_skill_roots == ()
-    assert _tree_receipt(contribution.skill_roots) == _tree_receipt(legacy_roots)
+    assert plugin.skill_roots == ("skills",)
+    assert plugin.drift_skill_roots == ()
+    assert _tree_receipt(source_roots)
     assert receipt.ready is True
     assert receipt.writes == ()
     assert receipt.external_effects == ()
@@ -88,6 +75,16 @@ async def test_v3_skills_match_v2_tree_and_cleanup_receipt(tmp_path: Path) -> No
 
     assert root.receipt().services == ()
     assert root.receipt().effects == ()
+
+
+def test_static_manifest_matches_pure_v3_module() -> None:
+    manifest = load_static_plugin_manifest(PLUGIN_ROOT)
+
+    assert manifest.name == plugin_module.name == "huayue-skills"
+    assert manifest.version == plugin_module.version == "1.0.2"
+    assert manifest.api_version == plugin_module.api_version == 3
+    assert manifest.entrypoint == "plugin.py"
+    assert not hasattr(plugin_module, "HuayueSkillsPlugin")
 
 
 @pytest.mark.asyncio
@@ -133,8 +130,7 @@ async def test_v3_skills_load_through_real_generation_manager(tmp_path: Path) ->
     )
     root = snapshot.composition_root
     assert root is not None
-    assert "core.skills" in root.receipt().services
-    assert "huayue-skills:skill:skill:skills" in root.receipt().effects
+    assert generation.contributions.drift_skill_roots == ()
 
     await manager.terminate_all()
 

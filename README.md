@@ -2,15 +2,15 @@
 
 Akashic personal skills bundle.
 
-插件优先使用 Composition API v3 的 `core.skills` 能力登记整个 `skills/` catalog；迁移期保留 API v2 `skill_roots()`，只用于旧 Core 兼容和同输入行为等价验证。
+插件通过 API v3 模块级 `skill_roots = ("skills",)` 声明整个 catalog，不保留 API v2 入口。
 
 ```text
-┌─────────────────────┐  inject core.skills  ┌──────────────────┐
-│ huayue-skills Fiber │ ────────────────────▶ │ PluginSkills     │
+┌─────────────────────┐  static skill_roots   ┌──────────────────┐
+│ huayue-skills module│ ─────────────────────▶│ PluginManager    │
 └──────────┬──────────┘                       └────────┬─────────┘
-           │ register("skills")                       │ freeze
+           │ source tree                              │ committed snapshot
            ▼                                          ▼
-    plugin source tree                         generation catalog
+       skills/*                                generation catalog
 ```
 
 Included skills:
@@ -47,6 +47,6 @@ Akashic 会自动加载插件，不需要重启。
 
 ## Notes
 
-- This plugin only provides `skills/` through `core.skills`
+- This plugin only provides the module-level `skills/` catalog
 - It does not provide MCP servers
 - It does not provide lifecycle hooks
