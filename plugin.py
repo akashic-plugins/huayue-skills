@@ -1,12 +1,12 @@
-from agent.plugins import Plugin
+from agent.plugin_composition import Context
+
+api_version = 3
+name = "huayue-skills"
+version = "1.1.0"
+skill_roots = ("skills",)
 
 
-class HuayueSkillsPlugin(Plugin):
-    api_version = 2
-    name = "huayue-skills"
-    version = "1.1.0"
-    desc = "Huayue personal skills bundle"
+async def apply(ctx: Context, config: object) -> None:
+    """保留纯 v3 generation 入口；Skill roots 由模块静态声明。"""
 
-    @classmethod
-    def skill_roots(cls) -> tuple[str, ...]:
-        return ("skills",)
+    _ = (ctx, config)
