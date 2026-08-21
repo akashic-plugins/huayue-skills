@@ -16,7 +16,7 @@ Akashic personal skills bundle.
 Included skills:
 
 - anthropic-diagram
-- codex-usage
+- codex-usage（Codex + OpenCode Go 剩余额度查询，零安装直查）
 - gh-cli
 - image-generation-nano
 - opencli

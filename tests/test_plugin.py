@@ -81,7 +81,7 @@ def test_static_manifest_matches_pure_v3_module() -> None:
     manifest = load_static_plugin_manifest(PLUGIN_ROOT)
 
     assert manifest.name == plugin_module.name == "huayue-skills"
-    assert manifest.version == plugin_module.version == "1.0.2"
+    assert manifest.version == plugin_module.version == "1.1.0"
     assert manifest.api_version == plugin_module.api_version == 3
     assert manifest.entrypoint == "plugin.py"
     assert not hasattr(plugin_module, "HuayueSkillsPlugin")

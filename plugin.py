@@ -2,7 +2,7 @@ from agent.plugin_composition import Context
 
 api_version = 3
 name = "huayue-skills"
-version = "1.0.2"
+version = "1.1.0"
 skill_roots = ("skills",)
 
 
