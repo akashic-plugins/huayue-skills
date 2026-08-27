@@ -1,4 +1,4 @@
 interface:
-  display_name: "Codex Usage"
-  short_description: "查询本地 Codex 用量、限额、Reset 与同步状态"
-  default_prompt: "Use $codex-usage to inspect local Codex usage and synchronization health."
+  display_name: "Codex / Command Code Usage"
+  short_description: "查询本地 Codex 用量、限额、Reset 与同步状态；查询 Command Code (GOAT) 订阅额度、窗口与月用量"
+  default_prompt: "Use $codex-usage to inspect local Codex usage and synchronization health; use scripts/commandcode-quota.sh for Command Code (GOAT) quota."
