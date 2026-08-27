@@ -1,2 +1,9 @@
 __pycache__/
 *.py[cod]
+
+# secrets
+*.pem
+*.key
+*api_key*
+*token.json*
+*.p12

@@ -1,4 +1,4 @@
 interface:
-  display_name: "Codex & OpenCode Go Usage"
-  short_description: "查询 Codex 与 OpenCode Go 订阅剩余额度、重置时间与 Reset 次数"
-  default_prompt: "Use $codex-usage to check remaining quota for Codex and OpenCode Go subscriptions."
+  display_name: "Codex / Command Code Usage"
+  short_description: "查询本地 Codex 用量、限额、Reset 与同步状态；查询 Command Code (GOAT) 订阅额度、窗口与月用量"
+  default_prompt: "Use $codex-usage to inspect local Codex usage and synchronization health; use scripts/commandcode-quota.sh for Command Code (GOAT) quota."
