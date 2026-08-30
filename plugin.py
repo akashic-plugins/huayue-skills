@@ -1,12 +1,12 @@
-from agent.plugins import Plugin
+api_version = 3
+name = "huayue-skills"
+version = "1.0.2"
+desc = "Huayue personal skills bundle"
+skill_roots = ("skills",)
+drift_skill_roots = ()
+workspace_roots = ()
+workspace_files = ()
 
 
-class HuayueSkillsPlugin(Plugin):
-    api_version = 2
-    name = "huayue-skills"
-    version = "1.0.2"
-    desc = "Huayue personal skills bundle"
-
-    @classmethod
-    def skill_roots(cls) -> tuple[str, ...]:
-        return ("skills",)
+def apply(ctx, config):
+    pass

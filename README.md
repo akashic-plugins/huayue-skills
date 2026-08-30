@@ -1,6 +1,6 @@
 # huayue-skills
 
-Akashic personal skills bundle.
+Akashic v3 personal skills bundle.
 
 Included skills:
 
