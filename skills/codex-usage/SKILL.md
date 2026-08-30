@@ -1,6 +1,6 @@
 ---
 name: codex-usage
-description: Install, query, update, and monitor local Codex token usage, model breakdowns, five-hour and weekly rate limits, reset credits, expiration times, and daily trends through the agent-first codex-usage CLI. Use when an agent needs machine-readable Codex usage data, when codex-usage may not be installed yet, when the local dashboard service must be started or inspected, or when sync and update health must be verified without scraping the web UI.
+description: Install, query, update, and monitor local Codex token usage, model breakdowns, five-hour and weekly rate limits, reset credits, expiration times, and daily trends through the agent-first codex-usage CLI. Also query Command Code (GOAT/Pro/Max) subscription credits, 5-hour/weekly windows, and monthly usage via scripts/commandcode-quota.sh (read-only alpha billing endpoints). Use when an agent needs machine-readable Codex usage data, when codex-usage may not be installed yet, when the local dashboard service must be started or inspected, when sync and update health must be verified without scraping the web UI, or when the user asks about Command Code / GOAT / command code 订阅额度、用量、窗口重置。触发词：codex, codex-usage, 额度, 用量, 重置, commandcode, command code, goat。
 ---
 
 # Codex Usage
@@ -76,6 +76,20 @@ codex-usage health
 ```
 
 Treat `ready` as healthy, `syncing` as temporary, and `degraded` as requiring inspection of `lastError`.
+
+## Command Code (GOAT) quota
+
+用户问 Command Code / GOAT / command code 订阅的额度、用量、窗口重置时，用只读脚本（不消费任何额度）：
+
+```bash
+bash scripts/commandcode-quota.sh
+```
+
+- Key 位置：`$CMD_KEY_FILE` 或默认 `/srv/data/services/akashic/state/workspace/plugin-data/commandcode/api_key`（权限 600）
+- 输出 JSON：account / plan / status / period / credits(monthly,purchased,free) / windows(fiveHour,weekly: used,cap,exceeded,resetAt) / usage(totalCount,totalCost,totalTokens)
+- `resetAt` 是毫秒时间戳，换算北京时间：`date -d @$((resetAt/1000))`
+- 依赖：curl + python3；key 失效（whoami 失败/401）时向用户要 Studio → API keys 的新 key 并重写 key 文件
+- 端点（alpha，未文档化，解析需防御）：`/alpha/whoami` → `/alpha/billing/credits`、`/alpha/billing/subscriptions`、`/alpha/usage/summary`，Bearer 认证
 
 ## Update safely
 

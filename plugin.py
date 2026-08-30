@@ -1,12 +1,12 @@
+from agent.plugin_composition import Context
+
 api_version = 3
 name = "huayue-skills"
-version = "1.0.2"
-desc = "Huayue personal skills bundle"
+version = "1.1.0"
 skill_roots = ("skills",)
-drift_skill_roots = ()
-workspace_roots = ()
-workspace_files = ()
 
 
-def apply(ctx, config):
-    pass
+async def apply(ctx: Context, config: object) -> None:
+    """保留纯 v3 generation 入口；Skill roots 由模块静态声明。"""
+
+    _ = (ctx, config)

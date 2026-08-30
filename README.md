@@ -2,10 +2,21 @@
 
 Akashic v3 personal skills bundle.
 
+插件通过 API v3 模块级 `skill_roots = ("skills",)` 声明整个 catalog，不保留 API v2 入口。
+
+```text
+┌─────────────────────┐  static skill_roots   ┌──────────────────┐
+│ huayue-skills module│ ─────────────────────▶│ PluginManager    │
+└──────────┬──────────┘                       └────────┬─────────┘
+           │ source tree                              │ committed snapshot
+           ▼                                          ▼
+       skills/*                                generation catalog
+```
+
 Included skills:
 
 - anthropic-diagram
-- codex-usage
+- codex-usage（Codex + OpenCode Go 剩余额度查询，零安装直查）
 - gh-cli
 - image-generation-nano
 - paper-explainer
@@ -35,6 +46,6 @@ Akashic 会自动加载插件，不需要重启。
 
 ## Notes
 
-- This plugin only provides `skills/`
+- This plugin only provides the module-level `skills/` catalog
 - It does not provide MCP servers
 - It does not provide lifecycle hooks
