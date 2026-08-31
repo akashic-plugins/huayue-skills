@@ -1,6 +1,6 @@
 # huayue-skills
 
-Akashic personal skills bundle.
+Akashic v3 personal skills bundle.
 
 插件通过 API v3 模块级 `skill_roots = ("skills",)` 声明整个 catalog，不保留 API v2 入口。
 
@@ -19,7 +19,6 @@ Included skills:
 - codex-usage（Codex + OpenCode Go 剩余额度查询，零安装直查）
 - gh-cli
 - image-generation-nano
-- opencli
 - paper-explainer
 - playwright-browser
 - yt-dlp-downloader

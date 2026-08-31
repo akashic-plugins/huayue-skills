@@ -23,7 +23,6 @@ EXPECTED_SKILLS = {
     "codex-usage",
     "gh-cli",
     "image-generation-nano",
-    "opencli",
     "paper-explainer",
     "playwright-browser",
     "yt-dlp-downloader",
