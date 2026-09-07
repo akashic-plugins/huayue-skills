@@ -10,6 +10,7 @@ import pytest
 import plugin as plugin_module
 from agent.plugin_composition import (
     CompositionRoot,
+    Context,
     PluginRuntime,
 )
 from agent.plugins.composable import ComposablePlugin
@@ -38,7 +39,7 @@ def _tree_receipt(roots: tuple[Path, ...]) -> tuple[tuple[str, int, str], ...]:
             receipt.append(
                 (
                     path.relative_to(root).as_posix(),
-                    stat.S_IMODE(path.stat().st_mode),
+                    stat.S_IMODE(path.stat().st_mode) & 0o111,
                     hashlib.sha256(path.read_bytes()).hexdigest(),
                 )
             )
@@ -46,15 +47,22 @@ def _tree_receipt(roots: tuple[Path, ...]) -> tuple[tuple[str, int, str], ...]:
 
 
 @pytest.mark.asyncio
-async def test_v3_skills_preserve_source_tree_and_cleanup_receipt(tmp_path: Path) -> None:
+async def test_v3_skills_preserve_source_tree_and_cleanup_receipt(
+    tmp_path: Path,
+) -> None:
     plugin = ComposablePlugin.from_module(plugin_module)
     source_roots = (PLUGIN_ROOT / "skills",)
     root = CompositionRoot("huayue-skills-parity")
+
+    async def mount(ctx: Context) -> None:
+        await plugin_module.apply(ctx, object())
+
     _ = await root.mount(
-        plugin,
+        mount,
         name="huayue-skills",
         runtime=PluginRuntime(
             plugin_id="huayue-skills",
+            generation_id="test-generation",
             plugin_dir=PLUGIN_ROOT,
             data_dir=tmp_path / "plugin-data",
             workspace=tmp_path / "workspace",
@@ -114,8 +122,10 @@ async def test_v3_skills_load_through_real_generation_manager(tmp_path: Path) ->
     snapshot = manager.current_snapshot
     assert generation is not None and snapshot is not None
     assert isinstance(generation.instance, ComposablePlugin)
-    assert generation.contributions.skill_roots == (
-        plugin_home / "huayue-skills" / "skills",
+    archived = generation.contributions.skill_roots
+    assert _tree_receipt(archived) == _tree_receipt((PLUGIN_ROOT / "skills",))
+    assert all(
+        path.is_relative_to(workspace / "runtime/plugin-archives") for path in archived
     )
     assert snapshot.plugin_skill_index is not None
     source_names = {
@@ -124,9 +134,7 @@ async def test_v3_skills_load_through_real_generation_manager(tmp_path: Path) ->
     }
     assert source_names == EXPECTED_SKILLS
     assert set(snapshot.plugin_skill_index.records) == EXPECTED_SKILLS
-    assert manager.active_plugins()[0].skill_roots == (
-        plugin_home / "huayue-skills" / "skills",
-    )
+    assert manager.active_plugins()[0].skill_roots == archived
     root = snapshot.composition_root
     assert root is not None
     assert generation.contributions.drift_skill_roots == ()

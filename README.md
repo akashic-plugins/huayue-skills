@@ -1,6 +1,6 @@
 # huayue-skills
 
-Akashic v3 personal skills bundle.
+Akashic Message runtime 的个人技能集合；静态 skill_roots 声明保持不变。
 
 插件通过 API v3 模块级 `skill_roots = ("skills",)` 声明整个 catalog，不保留 API v2 入口。
 
@@ -10,7 +10,7 @@ Akashic v3 personal skills bundle.
 └──────────┬──────────┘                       └────────┬─────────┘
            │ source tree                              │ committed snapshot
            ▼                                          ▼
-       skills/*                                generation catalog
+       skills/*                                archived generation catalog
 ```
 
 Included skills:
