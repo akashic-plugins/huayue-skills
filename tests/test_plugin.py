@@ -71,8 +71,7 @@ async def test_v3_skills_preserve_source_tree_and_cleanup_receipt(
     )
 
     receipt = root.receipt()
-    assert plugin.skill_roots == ("skills",)
-    assert plugin.drift_skill_roots == ()
+    assert plugin.asset_roots == (("skills", ("skills",)),)
     assert _tree_receipt(source_roots)
     assert receipt.ready is True
     assert receipt.writes == ()
@@ -122,22 +121,27 @@ async def test_v3_skills_load_through_real_generation_manager(tmp_path: Path) ->
     snapshot = manager.current_snapshot
     assert generation is not None and snapshot is not None
     assert isinstance(generation.instance, ComposablePlugin)
-    archived = generation.contributions.skill_roots
+    archived = dict(generation.contributions.asset_roots)["skills"]
     assert _tree_receipt(archived) == _tree_receipt((PLUGIN_ROOT / "skills",))
     assert all(
         path.is_relative_to(workspace / "runtime/plugin-archives") for path in archived
     )
-    assert snapshot.plugin_skill_index is not None
     source_names = {
         path.parent.name
         for path in (plugin_home / "huayue-skills" / "skills").glob("*/SKILL.md")
     }
     assert source_names == EXPECTED_SKILLS
-    assert set(snapshot.plugin_skill_index.records) == EXPECTED_SKILLS
-    assert manager.active_plugins()[0].skill_roots == archived
+    assert generation.asset_catalog is not None
+    assert {
+        path.parent.name
+        for asset in generation.asset_catalog.assets
+        if asset.category == "skills"
+        for path in asset.root_dir.glob("*/SKILL.md")
+    } == EXPECTED_SKILLS
+    assert generation.instance.asset_roots == (("skills", ("skills",)),)
     root = snapshot.composition_root
     assert root is not None
-    assert generation.contributions.drift_skill_roots == ()
+    assert generation.contributions.asset_roots
 
     await manager.terminate_all()
 
