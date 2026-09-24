@@ -17,7 +17,6 @@ from agent.plugin_composition.assets import INSTALLED_ASSETS
 from agent.plugins.composable import ComposablePlugin
 from agent.plugins.manager import PluginManager
 from agent.plugins.selection import PluginSelection
-from agent.plugins.snapshot import bind_runtime_snapshot, reset_runtime_snapshot
 from agent.plugins.static_manifest import load_static_plugin_manifest
 from bus.event_bus import EventBus
 from plugins.assets import plugin as assets_plugin
@@ -134,18 +133,13 @@ async def test_v3_skills_load_through_real_generation_manager(tmp_path: Path) ->
 
     try:
         generation = manager.generation("huayue-skills")
-        snapshot = manager.current_snapshot
-        assert generation is not None and snapshot is not None
+        root = manager.live_root
+        assert generation is not None and root is not None
         assert isinstance(generation.instance, ComposablePlugin)
-        root = snapshot.composition_root
-        assert root is not None
-        lease = manager._snapshot_store.lease()  # pyright: ignore[reportPrivateUsage]
-        token = bind_runtime_snapshot(lease)
-        try:
-            assets = root.context.require(INSTALLED_ASSETS)()
-        finally:
-            reset_runtime_snapshot(token)
-            await lease.release()
+        assert generation.fiber is not None
+        ctx = generation.fiber.context
+        async with ctx.runtime_scope():
+            assets = ctx.require(INSTALLED_ASSETS)(ctx)
         selected = [item for item in assets if item.owner_id == "huayue-skills"]
         assert len(selected) == 1
         archived = selected[0].root_dir
