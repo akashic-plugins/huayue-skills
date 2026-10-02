@@ -1,16 +1,13 @@
 # huayue-skills
 
-Akashic Message runtime 的个人技能集合；静态 skill_roots 声明保持不变。
-
-插件通过 API v3 模块级 `skill_roots = ("skills",)` 声明整个 catalog，不保留 API v2 入口。
+Akashic 的个人技能集合。插件通过 `apply(ctx)` 向 `INSTALLED_ASSETS` 注册 `skills/`，登记随当前 Fiber 的 Effect 清理。身份来自 `plugin.py`，不再保留静态 Skill 声明或重复的 TOML 清单。
 
 ```text
-┌─────────────────────┐  static skill_roots   ┌──────────────────┐
-│ huayue-skills module│ ─────────────────────▶│ PluginManager    │
-└──────────┬──────────┘                       └────────┬─────────┘
-           │ source tree                              │ committed snapshot
-           ▼                                          ▼
-       skills/*                                archived generation catalog
+┌──────────────────┐  register(ctx, "skills", "skills")  ┌──────────────────┐
+│ huayue-skills    │ ───────────────────────────────────▶│ Assets provider  │
+└──────────────────┘                                    └────────┬─────────┘
+                                                                ▼
+                                                  当前作用域的只读归档目录
 ```
 
 Included skills:
@@ -46,6 +43,6 @@ Akashic 会自动加载插件，不需要重启。
 
 ## Notes
 
-- This plugin only provides the module-level `skills/` catalog
+- This plugin only registers the `skills/` catalog
 - It does not provide MCP servers
-- It does not provide lifecycle hooks
+- Asset registration is removed when its Fiber is disposed
