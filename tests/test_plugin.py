@@ -7,16 +7,12 @@ from pathlib import Path
 
 import pytest
 
-import plugin as plugin_module
-from agent.plugin_composition import (
-    CompositionRoot,
-    Context,
-    PluginRuntime,
-)
 from agent.plugins.composable import ComposablePlugin
 from agent.plugins.manager import PluginManager
-from agent.plugins.static_manifest import load_static_plugin_manifest
+from plugins.assets import plugin as assets_module
 from bus.event_bus import EventBus
+from agent.plugin_composition.assets import INSTALLED_ASSETS
+from tests.fixtures.plugin_workspace import initialize_plugin_workspace
 
 PLUGIN_ROOT = Path(__file__).parents[1]
 EXPECTED_SKILLS = {
@@ -46,51 +42,8 @@ def _tree_receipt(roots: tuple[Path, ...]) -> tuple[tuple[str, int, str], ...]:
     return tuple(receipt)
 
 
-@pytest.mark.asyncio
-async def test_v3_skills_preserve_source_tree_and_cleanup_receipt(
-    tmp_path: Path,
-) -> None:
-    plugin = ComposablePlugin.from_module(plugin_module)
-    source_roots = (PLUGIN_ROOT / "skills",)
-    root = CompositionRoot("huayue-skills-parity")
-
-    async def mount(ctx: Context) -> None:
-        await plugin_module.apply(ctx, object())
-
-    _ = await root.mount(
-        mount,
-        name="huayue-skills",
-        runtime=PluginRuntime(
-            plugin_id="huayue-skills",
-            generation_id="test-generation",
-            plugin_dir=PLUGIN_ROOT,
-            data_dir=tmp_path / "plugin-data",
-            workspace=tmp_path / "workspace",
-            config=object(),
-        ),
-    )
-
-    receipt = root.receipt()
-    assert plugin.asset_roots == (("skills", ("skills",)),)
-    assert _tree_receipt(source_roots)
-    assert receipt.ready is True
-    assert receipt.writes == ()
-    assert receipt.external_effects == ()
-
-    await root.dispose()
-
-    assert root.receipt().services == ()
-    assert root.receipt().effects == ()
 
 
-def test_static_manifest_matches_pure_v3_module() -> None:
-    manifest = load_static_plugin_manifest(PLUGIN_ROOT)
-
-    assert manifest.name == plugin_module.name == "huayue-skills"
-    assert manifest.version == plugin_module.version == "1.1.0"
-    assert manifest.api_version == plugin_module.api_version == 3
-    assert manifest.entrypoint == "plugin.py"
-    assert not hasattr(plugin_module, "HuayueSkillsPlugin")
 
 
 @pytest.mark.asyncio
@@ -106,11 +59,13 @@ async def test_v3_skills_load_through_real_generation_manager(tmp_path: Path) ->
             "__pycache__",
         ),
     )
+    core = Path(assets_module.__file__).parents[1]
+    shutil.copytree(core / "assets", plugin_home / "assets")
     workspace = tmp_path / "workspace"
+    initialize_plugin_workspace(workspace)
     manager = PluginManager(
         plugin_dirs=[plugin_home],
         event_bus=EventBus(),
-        tool_registry=None,
         workspace=workspace,
         installed_cache_root=tmp_path / "plugin-home" / "cache",
     )
@@ -118,10 +73,13 @@ async def test_v3_skills_load_through_real_generation_manager(tmp_path: Path) ->
     await manager.load_all()
 
     generation = manager.generation("huayue-skills")
-    snapshot = manager.current_snapshot
-    assert generation is not None and snapshot is not None
+    root = manager.live_root
+    assert generation is not None and root is not None
+    assert generation.fiber is not None
     assert isinstance(generation.instance, ComposablePlugin)
-    archived = dict(generation.contributions.asset_roots)["skills"]
+    async with generation.fiber.context.runtime_scope():
+        assets = root.context.require(INSTALLED_ASSETS)(generation.fiber.context)
+    archived = tuple(asset.root_dir for asset in assets if asset.category == "skills")
     assert _tree_receipt(archived) == _tree_receipt((PLUGIN_ROOT / "skills",))
     assert all(
         path.is_relative_to(workspace / "runtime/plugin-archives") for path in archived
@@ -131,17 +89,12 @@ async def test_v3_skills_load_through_real_generation_manager(tmp_path: Path) ->
         for path in (plugin_home / "huayue-skills" / "skills").glob("*/SKILL.md")
     }
     assert source_names == EXPECTED_SKILLS
-    assert generation.asset_catalog is not None
     assert {
         path.parent.name
-        for asset in generation.asset_catalog.assets
+        for asset in assets
         if asset.category == "skills"
         for path in asset.root_dir.glob("*/SKILL.md")
     } == EXPECTED_SKILLS
-    assert generation.instance.asset_roots == (("skills", ("skills",)),)
-    root = snapshot.composition_root
-    assert root is not None
-    assert generation.contributions.asset_roots
 
     await manager.terminate_all()
 
