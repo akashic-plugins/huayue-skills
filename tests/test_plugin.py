@@ -10,8 +10,7 @@ import pytest
 from agent.plugins.composable import ComposablePlugin
 from agent.plugins.manager import PluginManager
 from plugins.assets import plugin as assets_module
-from bus.event_bus import EventBus
-from agent.plugin_composition.assets import INSTALLED_ASSETS
+from plugins.assets.contract import INSTALLED_ASSETS
 from tests.fixtures.plugin_workspace import initialize_plugin_workspace
 
 PLUGIN_ROOT = Path(__file__).parents[1]
@@ -65,7 +64,6 @@ async def test_v3_skills_load_through_real_generation_manager(tmp_path: Path) ->
     initialize_plugin_workspace(workspace)
     manager = PluginManager(
         plugin_dirs=[plugin_home],
-        event_bus=EventBus(),
         workspace=workspace,
         installed_cache_root=tmp_path / "plugin-home" / "cache",
     )
@@ -82,7 +80,7 @@ async def test_v3_skills_load_through_real_generation_manager(tmp_path: Path) ->
     archived = tuple(asset.root_dir for asset in assets if asset.category == "skills")
     assert _tree_receipt(archived) == _tree_receipt((PLUGIN_ROOT / "skills",))
     assert all(
-        path.is_relative_to(workspace / "runtime/plugin-archives") for path in archived
+        path.is_relative_to(plugin_home / "huayue-skills") for path in archived
     )
     source_names = {
         path.parent.name

@@ -1,10 +1,10 @@
 """Huayue Skill 包：把自带 skills 目录登记为当前组合的只读资产。"""
 from agent.plugin_composition import Context
-from agent.plugin_composition.assets import INSTALLED_ASSETS
+from plugins.assets.contract import INSTALLED_ASSETS
 
 api_version = 3
 name = "huayue-skills"
-version = "2.0.0"
+version = "2.0.1"
 inject = (INSTALLED_ASSETS,)
 
 
